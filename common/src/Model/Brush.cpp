@@ -80,12 +80,7 @@ namespace TrenchBroom {
 
         class Brush::HealEdgesCallback : public BrushGeometry::Callback {
         public:
-            void facesWillBeMerged(BrushFaceGeometry* remainingGeometry, BrushFaceGeometry* geometryToDelete) override {
-                auto* remainingFace = remainingGeometry->payload();
-                if (remainingFace != nullptr) {
-                    remainingFace->invalidate();
-                }
-
+            void facesWillBeMerged(BrushFaceGeometry*, BrushFaceGeometry* geometryToDelete) override {
                 auto* faceToDelete = geometryToDelete->payload();
                 delete faceToDelete;
             }
@@ -201,10 +196,6 @@ namespace TrenchBroom {
         m_geometry(other.m_geometry),
         m_transparent(other.m_transparent) {
             other.m_geometry = nullptr;
-
-            for (auto* face : m_faces) {
-                face->setBrush(this);
-            }
         }
 
         Brush& Brush::operator=(Brush other) noexcept {
@@ -218,15 +209,6 @@ namespace TrenchBroom {
             swap(lhs.m_faces, rhs.m_faces);
             swap(lhs.m_geometry, rhs.m_geometry);
             swap(lhs.m_transparent, rhs.m_transparent);
-
-            const auto resetFaces = [](Brush& brush) {
-                for (auto* face : brush.m_faces) {
-                    face->setBrush(&brush);
-                }
-            };
-
-            resetFaces(lhs);
-            resetFaces(rhs);
         }
 
         Brush::~Brush() {
@@ -328,11 +310,8 @@ namespace TrenchBroom {
 
         void Brush::addFace(BrushFace* face) {
             ensure(face != nullptr, "face is null");
-            ensure(face->brush() == nullptr, "face brush is null");
             assert(!kdl::vec_contains(m_faces, face));
-
             m_faces.push_back(face);
-            face->setBrush(this);
         }
 
         void Brush::cloneFaceAttributesFrom(const Brush& brush) {
@@ -1074,11 +1053,7 @@ namespace TrenchBroom {
                 auto* face = faceG->payload();
                 if (face != nullptr) { // could happen if the brush isn't fully specified
                     assert(face->geometry() == faceG);
-                    if (face->brush() == nullptr) {
-                        addFace(face);
-                    } else {
-                        m_faces.push_back(face);
-                    }
+                    addFace(face);
                     face->resetTexCoordSystemCache();
                 }
             }
