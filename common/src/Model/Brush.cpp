@@ -25,7 +25,6 @@
 #include "Polyhedron_Matcher.h"
 #include "Model/BrushFace.h"
 #include "Model/BrushGeometry.h"
-#include "Model/BrushNode.h"
 #include "Model/ModelFactory.h"
 #include "Model/TexCoordSystem.h"
 
@@ -152,12 +151,10 @@ namespace TrenchBroom {
         };
 
         Brush::Brush() :
-        m_node(nullptr),
         m_geometry(nullptr),
         m_transparent(false) {}
 
-        Brush::Brush(BrushNode* node, const vm::bbox3& worldBounds, const std::vector<BrushFace*>& faces) :
-        m_node(node),
+        Brush::Brush(const vm::bbox3& worldBounds, const std::vector<BrushFace*>& faces) :
         m_geometry(nullptr),
         m_transparent(false) {
             addFaces(faces);
@@ -169,11 +166,7 @@ namespace TrenchBroom {
             }
         }
 
-        Brush::Brush(const vm::bbox3& worldBounds, const std::vector<BrushFace*>& faces) :
-        Brush::Brush(nullptr, worldBounds, faces) {}
-
         Brush::Brush(const Brush& other) :
-        m_node(nullptr),
         m_geometry(nullptr),
         m_transparent(other.m_transparent) {
             auto faceMap = std::unordered_map<const BrushFace*, BrushFace*>();
@@ -191,7 +184,6 @@ namespace TrenchBroom {
         }
 
         Brush::Brush(Brush&& other) noexcept :
-        m_node(nullptr),
         m_faces(std::move(other.m_faces)),
         m_geometry(other.m_geometry),
         m_transparent(other.m_transparent) {
@@ -219,10 +211,6 @@ namespace TrenchBroom {
             delete m_geometry;
             m_geometry = nullptr;
             kdl::vec_clear_and_delete(m_faces);
-        }
-
-        void Brush::setNode(BrushNode* node) {
-            m_node = node;
         }
 
         const vm::bbox3& Brush::bounds() const {
@@ -295,13 +283,6 @@ namespace TrenchBroom {
                 }
             }
             return true;
-        }
-
-        void Brush::faceDidChange() {
-            if (m_node != nullptr) {
-                m_node->invalidateIssues();
-                m_node->invalidateVertexCache();
-            }
         }
 
         void Brush::addFaces(const std::vector<BrushFace*>& faces) {
@@ -1056,10 +1037,6 @@ namespace TrenchBroom {
                     addFace(face);
                     face->resetTexCoordSystemCache();
                 }
-            }
-
-            if (m_node) {
-                m_node->invalidateVertexCache();
             }
         }
 
