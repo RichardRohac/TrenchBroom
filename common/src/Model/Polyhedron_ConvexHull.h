@@ -911,7 +911,8 @@ namespace TrenchBroom {
                         }
                         
                         // Is the point to be added colinear with the first two vertices of the face being created?
-                        const bool valid = std::get<0>(vm::from_points(top->position(), point, v1->position()));
+                        const auto [valid, plane] = vm::from_points(top->position(), point, v1->position());
+                        unused(plane);
                         return valid;
                     };
                     
