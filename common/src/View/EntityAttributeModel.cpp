@@ -317,14 +317,15 @@ namespace TrenchBroom {
 
                 qDebug() << "EntityAttributeModel::setRows: one row changed: " << mapStringToUnicode(document->encoding(), oldDeletion.name()) << " -> " << mapStringToUnicode(document->encoding(), newAddition.name());
 
-                if (const auto oldIndex = kdl::vec_index_of(m_rows, oldDeletion)) {
-                    m_rows.at(*oldIndex) = newAddition;
+                const auto oldIndex = kdl::vec_index_of(m_rows, oldDeletion);
+                ensure(oldIndex, "deleted row must be found");
 
-                    // Notify Qt
-                    const QModelIndex topLeft = index(static_cast<int>(*oldIndex), 0);
-                    const QModelIndex bottomRight = index(static_cast<int>(*oldIndex), 1);
-                    emit dataChanged(topLeft, bottomRight);
-                }
+                m_rows.at(*oldIndex) = newAddition;
+
+                // Notify Qt
+                const QModelIndex topLeft = index(static_cast<int>(*oldIndex), 0);
+                const QModelIndex bottomRight = index(static_cast<int>(*oldIndex), 1);
+                emit dataChanged(topLeft, bottomRight);
                 return;
             }
 
